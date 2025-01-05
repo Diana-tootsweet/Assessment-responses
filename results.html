@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submissions</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <h1>Saved Submissions</h1>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Edited Text</th>
+            <th>File Name</th>
+        </tr>
+        {% for submission in submissions %}
+        <tr>
+            <td>{{ submission.name }}</td>
+            <td>{{ submission.email }}</td>
+            <td>{{ submission.edited_text }}</td>
+            <td>{{ submission.file_name }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
