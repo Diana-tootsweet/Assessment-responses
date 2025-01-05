@@ -1,6 +1,6 @@
 import os
 import json
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, request, jsonify, render_template
 from datetime import datetime
 
 app = Flask(__name__)
@@ -21,14 +21,14 @@ def index():
                 submissions.append({
                     "name": data["name"],
                     "email": data["email"],
-                    "timestamp": file_name.split(".")[0],  # Extract timestamp from filename
+                    "timestamp": file_name.split(".json")[0],  # Extract timestamp
                     "file_name": file_name  # Include filename for link
                 })
 
     # Sort submissions by date/time
     submissions.sort(key=lambda x: x["timestamp"], reverse=True)
 
-    # Render the list of submissions
+    # Render a simple page to display submissions
     return render_template("index.html", submissions=submissions)
 
 @app.route("/submission/<file_name>")
@@ -44,13 +44,13 @@ def view_submission(file_name):
 
 @app.route("/submit", methods=["POST"])
 def submit():
-    data = request.json
+    data = request.json  # Capture the JSON data sent from the frontend
 
     # Validate the data
     if not data.get("name") or not data.get("email") or not data.get("edited_text") or not data.get("time_spent"):
         return jsonify({"error": "Invalid data"}), 400
 
-    # Generate a filename based on timestamp
+    # Generate a filename based on the timestamp and user's name
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     filename = f"{timestamp}_{data['name'].replace(' ', '_')}.json"
     filepath = os.path.join(SUBMISSIONS_FOLDER, filename)
