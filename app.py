@@ -2,8 +2,10 @@ import os
 import json
 from flask import Flask, request, jsonify, render_template
 from datetime import datetime
+from flask_cors import CORS  # Import CORS
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
 # Submissions folder
 SUBMISSIONS_FOLDER = "submissions"
