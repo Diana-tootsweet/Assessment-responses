@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submission Details</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .time-spent {
+            text-align: right;
+            font-size: 1.2em;
+            color: #e53935;
+        }
+        .editable-box {
+            border: 1px solid #ccc;
+            padding: 10px;
+            white-space: pre-wrap;
+            font-family: Arial, sans-serif;
+            font-size: 1em;
+            line-height: 1.6;
+            background-color: #fdfdfd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>{{ submission.name }}'s Submission</h1>
+        <div class="time-spent">Time Spent: {{ submission.time_spent }}</div>
+        <div class="editable-box">{{ submission.edited_text }}</div>
+    </div>
+</body>
+</html>
