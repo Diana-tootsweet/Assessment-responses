@@ -1,6 +1,6 @@
 import os
 import json
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, jsonify, render_template, request
 from datetime import datetime
 
 app = Flask(__name__)
@@ -12,51 +12,54 @@ if not os.path.exists(SUBMISSIONS_FOLDER):
 
 @app.route("/")
 def index():
-    return "Backend is running!"
+    # Fetch all submissions
+    submissions = []
+    for file_name in os.listdir(SUBMISSIONS_FOLDER):
+        if file_name.endswith(".json"):
+            with open(os.path.join(SUBMISSIONS_FOLDER, file_name), "r") as file:
+                data = json.load(file)
+                submissions.append({
+                    "name": data["name"],
+                    "email": data["email"],
+                    "timestamp": file_name.split(".")[0],  # Extract timestamp from filename
+                    "file_name": file_name  # Include filename for link
+                })
+
+    # Sort submissions by date/time
+    submissions.sort(key=lambda x: x["timestamp"], reverse=True)
+
+    # Render the list of submissions
+    return render_template("index.html", submissions=submissions)
+
+@app.route("/submission/<file_name>")
+def view_submission(file_name):
+    # Load the specific submission file
+    file_path = os.path.join(SUBMISSIONS_FOLDER, file_name)
+    if os.path.exists(file_path):
+        with open(file_path, "r") as file:
+            data = json.load(file)
+        return render_template("submission.html", submission=data)
+    else:
+        return "Submission not found", 404
 
 @app.route("/submit", methods=["POST"])
 def submit():
-    data = request.json  # Capture the JSON data sent from the frontend
+    data = request.json
 
     # Validate the data
-    if not data.get("name") or not data.get("email") or not data.get("edited_text"):
+    if not data.get("name") or not data.get("email") or not data.get("edited_text") or not data.get("time_spent"):
         return jsonify({"error": "Invalid data"}), 400
 
-    # Generate a filename based on the timestamp and user's name
+    # Generate a filename based on timestamp
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     filename = f"{timestamp}_{data['name'].replace(' ', '_')}.json"
     filepath = os.path.join(SUBMISSIONS_FOLDER, filename)
 
-    # Save the data as a JSON file locally
+    # Save the data as a JSON file
     with open(filepath, "w") as file:
         json.dump(data, file, indent=4)
 
     return jsonify({"message": "Response saved successfully!"}), 200
-
-@app.route("/results", methods=["GET"])
-def view_results():
-    submissions = []
-    # Loop through all files in the submissions folder
-    for filename in os.listdir(SUBMISSIONS_FOLDER):
-        if filename.endswith(".json"):
-            filepath = os.path.join(SUBMISSIONS_FOLDER, filename)
-            with open(filepath, "r") as file:
-                submission = json.load(file)
-                submission["file_name"] = filename  # Add the filename for reference
-                submissions.append(submission)
-    return jsonify(submissions)  # Return the submissions as JSON
-
-@app.route("/results/html", methods=["GET"])
-def view_results_html():
-    submissions = []
-    for filename in os.listdir(SUBMISSIONS_FOLDER):
-        if filename.endswith(".json"):
-            filepath = os.path.join(SUBMISSIONS_FOLDER, filename)
-            with open(filepath, "r") as file:
-                submission = json.load(file)
-                submission["file_name"] = filename
-                submissions.append(submission)
-    return render_template("results.html", submissions=submissions)
 
 if __name__ == "__main__":
     app.run(debug=True)
