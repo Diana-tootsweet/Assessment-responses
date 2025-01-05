@@ -2,10 +2,10 @@ import os
 import json
 from flask import Flask, request, jsonify, render_template
 from datetime import datetime
-from flask_cors import CORS  # Import CORS
+from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+CORS(app)
 
 # Submissions folder
 SUBMISSIONS_FOLDER = "submissions"
@@ -14,7 +14,6 @@ if not os.path.exists(SUBMISSIONS_FOLDER):
 
 @app.route("/")
 def index():
-    # Fetch all submissions
     submissions = []
     for file_name in os.listdir(SUBMISSIONS_FOLDER):
         if file_name.endswith(".json"):
@@ -23,45 +22,40 @@ def index():
                 submissions.append({
                     "name": data["name"],
                     "email": data["email"],
-                    "timestamp": file_name.split(".json")[0],  # Extract timestamp
-                    "file_name": file_name  # Include filename for link
+                    "timestamp": file_name.split(".json")[0],
+                    "file_name": file_name
                 })
-
-    # Sort submissions by date/time
     submissions.sort(key=lambda x: x["timestamp"], reverse=True)
-
-    # Render a simple page to display submissions
     return render_template("index.html", submissions=submissions)
 
 @app.route("/submission/<file_name>")
 def view_submission(file_name):
-    # Load the specific submission file
     file_path = os.path.join(SUBMISSIONS_FOLDER, file_name)
     if os.path.exists(file_path):
         with open(file_path, "r") as file:
             data = json.load(file)
         return render_template("submission.html", submission=data)
     else:
-        return "Submission not found", 404
+        return render_template("error.html", message="Submission not found."), 404
 
 @app.route("/submit", methods=["POST"])
 def submit():
-    data = request.json  # Capture the JSON data sent from the frontend
+    try:
+        data = request.json
+        if not data.get("name") or not data.get("email") or not data.get("edited_text") or not data.get("time_spent"):
+            return jsonify({"error": "Invalid data"}), 400
 
-    # Validate the data
-    if not data.get("name") or not data.get("email") or not data.get("edited_text") or not data.get("time_spent"):
-        return jsonify({"error": "Invalid data"}), 400
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        filename = f"{timestamp}_{data['name'].replace(' ', '_')}.json"
+        filepath = os.path.join(SUBMISSIONS_FOLDER, filename)
 
-    # Generate a filename based on the timestamp and user's name
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    filename = f"{timestamp}_{data['name'].replace(' ', '_')}.json"
-    filepath = os.path.join(SUBMISSIONS_FOLDER, filename)
+        with open(filepath, "w") as file:
+            json.dump(data, file, indent=4)
 
-    # Save the data as a JSON file
-    with open(filepath, "w") as file:
-        json.dump(data, file, indent=4)
-
-    return jsonify({"message": "Response saved successfully!"}), 200
+        print(f"Submission received: {data['name']} - {data['email']} at {timestamp}")
+        return jsonify({"message": "Response saved successfully!"}), 200
+    except Exception as e:
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
